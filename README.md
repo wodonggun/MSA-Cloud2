@@ -326,27 +326,10 @@ kubectl expose deploy gateway --type=LoadBalancer --port=8080
               cpu: 500m
             requests:
               cpu: 200m
-```　  
+```
 　  
     
-　  
-　  
-   
-# Zreo-Downtown Deploy
 
-* 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscale 나 CB 설정을 제거함
-
-- seige 로 배포작업 직전에 워크로드를 모니터링 함.
-
-`siege -c100 -t80S -r10 -v --content-type "application/json" 'http://52.231.94.89:8080/reservations POST {"restaurantNo": "10", "day":"20210214"}'`
-    
-　  
-　  
-
-- 새버전으로의 배포 시작
-```
-kubectl set image deploy reservation reservation=skteam02.azurecr.io/reservation:r1 -n skteam02
-```
     
 　  
 　  
@@ -365,11 +348,11 @@ kubectl set image deploy reservation reservation=skteam02.azurecr.io/reservation
     
 　  
 　  
-```
+
 # readiness 적용 이미지 배포
 kubectl apply -f kubernetes/deployment.yaml
 # 이미지 변경 배포 한 후 Availability 확인:
-```
+
 ![20210215_174012_27](https://user-images.githubusercontent.com/77368612/107924279-0dbaa980-6fb6-11eb-985b-0891124e9e24.png)
     
 　  
