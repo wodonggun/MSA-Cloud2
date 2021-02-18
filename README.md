@@ -19,10 +19,10 @@
 `비기능적 요구사항`
 1. 트랜잭션
     1. No Show를 방지하기 위해 Deposit이 결재되지 않으면 예약이 안되도록 한다.(Sync)
-    1. 예약을 취소하면 Deposit을 환불하고 Restaurant에 예약취소 내역을 전달한다.(Async)
+    1. 결제를 취소하면 payment를 환불하고 Restaurant에 예약취소 내역을 전달한다.(Async)
 1. 장애격리
-    1. Deposit 시스템이 과중되면 예약을 받지 않고 잠시후에 하도록 유도한다(Circuit breaker, fallback)
-    1. Restaurant 서비스가 중단되더라도 예약은 받을 수 있다.(Asyncm, Event Dirven)
+    1. payment 시스템이 과중되면 예약을 받지 않고 잠시후에 하도록 유도한다(Circuit breaker, fallback)
+    1. Cinema 서비스가 중단되더라도 예약은 받을 수 있다.(Asyncm, Event Dirven)
 1. 성능
     1. 고객이 예약상황을 조회할 수 있도록 별도의 view로 구성한다.(CQRS)  
 
@@ -50,8 +50,7 @@
 # 분석/설계
 
 ### Event Storming 결과
-![eventStorming](https://user-images.githubusercontent.com/77368612/107878112-d3003500-6f13-11eb-8fd8-aaf056f10f56.png)
-　  
+![image](https://user-images.githubusercontent.com/35188271/108287881-e3900400-71ce-11eb-9c58-8ee65c54865d.png)
 　     
 ### 기능적 요구사항 검증(1)
 
@@ -332,37 +331,6 @@ kubectl expose deploy gateway --type=LoadBalancer --port=8080
 
     
 　  
-　  
-### readiness 옵션이 없는 경우 배포 중 서비스 요청처리 실패
-
-![20210215_174012_25](https://user-images.githubusercontent.com/77368612/107923856-6b022b00-6fb5-11eb-83ec-d9aff7aab485.png)
-    
-　  
-　  
-   
-### readiness 옵션 추가
-
-- deployment.yaml 의 readiness probe 의 설정
-
-![20210215_174655](https://user-images.githubusercontent.com/77368612/107924141-d6e49380-6fb5-11eb-98e9-73c36346fca8.png)
-    
-　  
-　  
-
-# readiness 적용 이미지 배포
-kubectl apply -f kubernetes/deployment.yaml
-# 이미지 변경 배포 한 후 Availability 확인:
-
-![20210215_174012_27](https://user-images.githubusercontent.com/77368612/107924279-0dbaa980-6fb6-11eb-985b-0891124e9e24.png)
-    
-　  
-　  
-- 배포기간 동안 Availability 가 변화없기 때문에 무정지 재배포가 성공한 것으로 확인됨.
-
-![20210215_174012_28](https://user-images.githubusercontent.com/77368612/107924289-114e3080-6fb6-11eb-935f-a21ea1d7b33c.png)
-    
-　  
-　      
     
 　  
 　  
