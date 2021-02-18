@@ -178,15 +178,15 @@ kubectl create deploy payment --image=skwooacr.azurecr.io/payment:latest
 
 - Gateway의 External-IP 확인
 
-![20210215_154035_16](https://user-images.githubusercontent.com/77368612/107913733-43ef2d80-6fa4-11eb-98b4-dbe191a93c83.png)
+![image](https://user-images.githubusercontent.com/35188271/108289934-b0e80a80-71d2-11eb-82e6-714ba6d50ca9.png)
+
     
 　  
 　  
 - External-IP 로 Reservation서비스에 접근
 
-![20210215_154035_17](https://user-images.githubusercontent.com/77368612/107913727-42be0080-6fa4-11eb-90b5-cf7b0e0cbe04.png)
-    
-　  
+
+![image](https://user-images.githubusercontent.com/35188271/108290127-12a87480-71d3-11eb-8858-5fd719de2a65.png)
 　      
 　  
 　  
@@ -196,39 +196,35 @@ kubectl create deploy payment --image=skwooacr.azurecr.io/payment:latest
 - Deploy API 호출
 
 ```
-# Namespace 생성
-kubectl create ns skteam02
-
 # 소스를 가져와 각각의 MSA 별로 빌드 진행
 
 # 도커라이징 : Azure Registry에 Image Push 
-az acr build --registry skteam02 --image skteam02.azurecr.io/reservation:latest .  
-az acr build --registry skteam02 --image skteam02.azurecr.io/deposit:latest . 
-az acr build --registry skteam02 --image skteam02.azurecr.io/restaurant:latest .   
-az acr build --registry skteam02 --image skteam02.azurecr.io/customercenter:latest .   
-az acr build --registry skteam02 --image skteam02.azurecr.io/gateway:latest . 
+az acr build --registry skwooacr --image skwooacr.azurecr.io/reservation:latest .  
+az acr build --registry skwooacr --image skwooacr.azurecr.io/payment:latest . 
+az acr build --registry skwooacr --image skwooacr.azurecr.io/cinema:latest .   
+az acr build --registry skwooacr --image skwooacr.azurecr.io/information:latest .   
+az acr build --registry skwooacr --image skwooacr.azurecr.io/gateway:latest . 
 
 # 컨테이터라이징 : Deploy, Service 생성
-kubectl create deploy reservation --image=skteam02.azurecr.io/reservation:latest -n skteam02
-kubectl expose deploy reservation --type="ClusterIP" --port=8080 -n skteam02
-kubectl create deploy deposit --image=skteam02.azurecr.io/deposit:latest -n skteam02
-kubectl expose deploy deposit --type="ClusterIP" --port=8080 -n skteam02
-kubectl create deploy restaurant --image=skteam02.azurecr.io/restaurant:latest -n skteam02
-kubectl expose deploy restaurant --type="ClusterIP" --port=8080 -n skteam02
-kubectl create deploy customercenter --image=skteam02.azurecr.io/customercenter:latest -n skteam02
-kubectl expose deploy customercenter --type="ClusterIP" --port=8080 -n skteam02
-kubectl create deploy gateway --image=skteam02.azurecr.io/gateway:latest -n skteam02
-kubectl expose deploy gateway --type=LoadBalancer --port=8080 -n skteam02
-
-#kubectl get all -n skteam02
+kubectl create deploy reservation --image=skwooacr.azurecr.io/reservation:latest
+kubectl expose deploy reservation --type="ClusterIP" --port=8080
+kubectl create deploy payment --image=skwooacr.azurecr.io/payment:latest
+kubectl expose deploy payment --type="ClusterIP" --port=8080 
+kubectl create deploy restaurant --image=skwooacr.azurecr.io/restaurant:latest
+kubectl expose deploy restaurant --type="ClusterIP" --port=8080
+kubectl create deploy information --image=skwooacr.azurecr.io/information:latest 
+kubectl expose deploy information --type="ClusterIP" --port=8080
+kubectl create deploy gateway --image=skwooacr.azurecr.io/gateway:latest 
+kubectl expose deploy gateway --type=LoadBalancer --port=8080
+#kubectl get pod,service,deploy
 ```
     
 　  
 　  
 - Deploy 확인
 
-![20210215_155905_18](https://user-images.githubusercontent.com/77368612/107914935-c7118300-6fa6-11eb-83c3-169869bcd5ce.png)
-    
+
+![image](https://user-images.githubusercontent.com/35188271/108290434-bc880100-71d3-11eb-8929-1a45c433239d.png)
 　  
 　  
       
@@ -247,19 +243,25 @@ kubectl expose deploy gateway --type=LoadBalancer --port=8080 -n skteam02
 
     
 　  
-　  
+- 서킷브레이크 적용 전 (100% 적용)
+
+![image](https://user-images.githubusercontent.com/35188271/108315303-8f047d00-71fe-11eb-83b8-7807ccefc645.png)
+ 　  
 
 
 - application.yml 설정
 
-![20210215_160633_19](https://user-images.githubusercontent.com/77368612/107915501-f379cf00-6fa7-11eb-9134-0aa25f7ce18b.png)
+![image](https://user-images.githubusercontent.com/35188271/108290590-112b7c00-71d4-11eb-92d6-840c5d3f551c.png)
 
-    
+
+ 
+
 　  
 
-- 피호출 서비스(예치금 결제:deposit) 의 임의 부하 처리  Reservation.java(entity)
+- 피호출 서비스(결제서비스:payment) 의 임의 부하 처리  Reservation.java(entity)
 
-![20210215_160633_20](https://user-images.githubusercontent.com/77368612/107915504-f4126580-6fa7-11eb-97a6-9c5f58ca0a46.png)
+![image](https://user-images.githubusercontent.com/35188271/108290662-38824900-71d4-11eb-8ed0-7aa5d9134874.png)
+
 
     
 　  
@@ -269,16 +271,14 @@ kubectl expose deploy gateway --type=LoadBalancer --port=8080 -n skteam02
 
 - 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인 (동시사용자 100명, 60초 진행)
 
-![20210215_160633_7](https://user-images.githubusercontent.com/77368612/107916124-1bb5fd80-6fa9-11eb-8ee7-8a340d7a7682.png)
-```
-* 요청이 과도하여 CB를 동작함 요청을 차단
-* 요청을 어느정도 돌려보내고나니, 기존에 밀린 일들이 처리되었고, 회로를 닫아 요청을 다시 받기 시작
-* 다시 요청이 쌓이기 시작하여 건당 처리시간이 610 밀리를 살짝 넘기기 시작 => 회로 열기 => 요청 실패처리
-```
+![image](https://user-images.githubusercontent.com/35188271/108318665-8bbfc000-7203-11eb-926c-a99ff003b8f3.png)
+
+
     
 　  
 　  
-![20210215_152121_8](https://user-images.githubusercontent.com/77368612/107915450-d93ff100-6fa7-11eb-8ac6-78c508828b29.png)
+
+![image](https://user-images.githubusercontent.com/35188271/108318584-69c63d80-7203-11eb-8f25-dee673b35ab7.png)
 
 `운영시스템은 죽지 않고 지속적으로 CB 에 의하여 적절히 회로가 열림과 닫힘이 벌어지면서 자원을 보호하고 있음을 보여줌`
     
@@ -304,31 +304,29 @@ kubectl expose deploy gateway --type=LoadBalancer --port=8080 -n skteam02
 
 ### autoscale out 설정 
 
-- kubectl autoscale deploy reservation --min=1 --max=10 --cpu-percent=15 -n skteam2
+- kubectl autoscale deploy reservation --min=1 --max=10 --cpu-percent=15
 
-![20210215_170036_21](https://user-images.githubusercontent.com/77368612/107920351-2aec7980-6fb0-11eb-9e2a-98bc26e3c503.png)
-    
-　  
+![image](https://user-images.githubusercontent.com/35188271/108320705-8152f580-7206-11eb-8d15-ed4fba68baba.png)
+
 　  
 - CB 에서 했던 방식대로 워크로드를 1분 동안 걸어준다.
 
-`$ siege -c100 -t60S -r10 -v --content-type "application/json" 'http://52.231.94.89:8080/reservations POST {"restaurantNo": "10", "day":"20210214"}' `
+`siege -c100 -t60S -r10 -v --content-type "application/json" 'http://52.231.32.13:8080/reservations POST {"cinemaNo": "AVATOR", "time":"2021-02-18_10:00~13:00"}'`
 
     
-　  
-　  
-- 오토스케일이 어떻게 되고 있는지 모니터링을 걸어둔다:
 
-`watch kubectl get all -n skteam02`
-
-    
-　  
 　  
 - 어느정도 시간이 흐른 후 (약 30초) 스케일 아웃이 벌어지는 것을 확인할 수 있다:
+![image](https://user-images.githubusercontent.com/35188271/108323433-0390e900-720a-11eb-9742-8f0c3e6b8c35.png)
 
-![20210215_170036_23](https://user-images.githubusercontent.com/77368612/107920537-77d05000-6fb0-11eb-9a64-ebcb5525793e.png)
-    
-　  
+- deployment.yml 아래 설정 완료.　  
+```
+          resources:
+            limits:
+              cpu: 500m
+            requests:
+              cpu: 200m
+```　  
 　  
     
 　  
@@ -393,16 +391,11 @@ kubectl apply -f kubernetes/deployment.yaml
 
 ![image](https://user-images.githubusercontent.com/77368612/107970557-99532b00-6ff4-11eb-82bf-312a9f8f3c8b.png)
     
-　  
-　  
-- reservation pod에 liveness가 적용된 부분 확인
-
-![20210215_181110_32](https://user-images.githubusercontent.com/77368612/107926561-37c19b00-6fb9-11eb-9fc0-98b22505b3bd.png)
-
-    
+　    
 　  
 　  
 - reservation 서비스의 liveness가 발동되어 3번 retry 시도 한 부분 확인
+- 
+![image](https://user-images.githubusercontent.com/35188271/108305154-bf432000-71ec-11eb-8681-63b32bd68317.png)
 
-![20210215_180742_31](https://user-images.githubusercontent.com/77368612/107926211-c255ca80-6fb8-11eb-93b5-200e3e2c36a0.png)
 
